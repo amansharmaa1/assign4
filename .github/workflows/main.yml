@@ -21,21 +21,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1 # or your AWS region
 
-      - name: Login to Amazon ECR
-        id: login-ecr
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          # Ensure we're using the ECR Public login endpoint
+          registry-type: public
 
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build, tag, and push image to Amazon ECR Public
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: public.ecr.aws/p6v8j1i8/aman4 # your ECR repository name
+          ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          ECR_REPOSITORY: aman4 # your ECR public repository name
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Build a docker container and push it to ECR so that it can
-          # be deployed to ECS.
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # be deployed to ECS. Make sure you're using the correct URI for the public registry.
+          docker build -t public.ecr.aws/p6v8j1i8/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push public.ecr.aws/p6v8j1i8/$ECR_REPOSITORY:$IMAGE_TAG
           
           # If you want to use the 'latest' tag, you can also push that.
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker tag public.ecr.aws/p6v8j1i8/$ECR_REPOSITORY:$IMAGE_TAG public.ecr.aws/p6v8j1i8/$ECR_REPOSITORY:latest
+          docker push public.ecr.aws/p6v8j1i8/$ECR_REPOSITORY:latest
